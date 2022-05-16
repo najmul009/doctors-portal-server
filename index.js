@@ -36,7 +36,7 @@ async function run() {
         });
 
         app.get('/available', async(req, res)=>{
-            const date = req.query.date || 'May 16, 2022';
+            const date = req.query.date ;
             const services = await slotsCollection.find().toArray();
             const query = {date: date};
             const bookings = await bookingCollection.find(query).toArray();
@@ -50,6 +50,13 @@ async function run() {
                 
             })
             res.send(services)
+        });
+
+        app.get('/mybookings', async(req, res)=>{
+            const email = req.query.email;
+            const query = {email: email};
+            const myBookings = await bookingCollection.find(query).toArray();
+            res.send(myBookings)
         })
 
     }
