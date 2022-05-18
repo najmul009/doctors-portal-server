@@ -27,16 +27,27 @@ function verifyJWT(req,res,next){
 }
 
 async function run() {
+    
     try {
         await client.connect()
         const slotsCollection = client.db("doctors-db").collection("booking-slots")
         const bookingCollection = client.db("doctors-db").collection("users-booking")
         const userCollection = client.db("doctors-db").collection("users")
+        const doctorCollection = client.db("doctors-db").collection("doctors")
 
+        const verifyAdmin =async( req,res,next)=>{
+            const requester = req.decoded.email;
+            const isAdmin = await userCollection.findOne({email:requester});
+            if(isAdmin.role === 'admin'){
+                next()
+            }else{
+                return res.status(401).send({message:'Forbidden access'})
+            }
+        }
 
         app.get('/services', async (req, res) => {
             const query = {}
-            const cursor = slotsCollection.find(query)
+            const cursor = slotsCollection.find(query).project({ name: 1 });
             const slots = await cursor.toArray()
             res.send(slots)
         });
@@ -99,7 +110,7 @@ async function run() {
             const allUsers = await userCollection.find().toArray();
             res.send(allUsers);
         });
-        app.put('/user/admin/:email', verifyJWT,async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT,verifyAdmin,async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updateDoc = {
@@ -115,6 +126,16 @@ async function run() {
             if(isAdmin[0].role==='admin'){
                 res.send(isAdmin)
             }
+            else{
+                res.status(403).send({message:'Forbidden access'})
+            }
+        });
+
+        app.post('/addDoctor',verifyJWT,verifyAdmin, async (req, res) => {
+            console.log('asdf');
+            const doctor = req.body;
+            const result = await doctorCollection.insertOne(doctor);
+            res.send(result)
         })
 
         
