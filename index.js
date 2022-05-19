@@ -136,7 +136,22 @@ async function run() {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
             res.send(result)
-        })
+        });
+        
+        app.get('/manageDoctors',verifyJWT,verifyAdmin, async (req, res) => {
+            const result = await doctorCollection.find().toArray();
+            res.send(result)
+        });
+
+        app.delete('/manageDoctors/:email',verifyJWT,verifyAdmin, async (req, res) => {
+            console.log('asdfgh');
+            const email = req.params.email;
+            const filter = { email: email };
+            const result = await doctorCollection.deleteOne(filter);
+            res.send(result)
+        });
+        
+
 
         
 
